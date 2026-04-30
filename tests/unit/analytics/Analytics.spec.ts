@@ -1,10 +1,10 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import Analytics from '../../src/analytics/presentation/views/Analytics.vue';
+import Analytics from '../../../src/analytics/presentation/views/Analytics.vue';
 
 const initialize = vi.fn();
 
-vi.mock('../../src/auth/store/authStore', () => ({
+vi.mock('../../../src/auth/store/authStore', () => ({
   useAuthStore: () => ({
     userId: 'user-1',
     isSignedIn: true,
@@ -12,13 +12,13 @@ vi.mock('../../src/auth/store/authStore', () => ({
   })
 }));
 
-vi.mock('../../src/analytics/infrastructure/plants.service', () => ({
+vi.mock('../../../src/analytics/infrastructure/plants.service', () => ({
   plantsService: {
     getPlantsByUser: vi.fn().mockResolvedValue({ data: [] })
   }
 }));
 
-vi.mock('../../src/analytics/infrastructure/analytics.service', () => ({
+vi.mock('../../../src/analytics/infrastructure/analytics.service', () => ({
   analyticsService: {
     getAllSensorData: vi.fn().mockResolvedValue({ data: [] }),
     calculateAnalyticsFromMetrics: vi.fn().mockReturnValue({
@@ -34,7 +34,7 @@ vi.mock('../../src/analytics/infrastructure/analytics.service', () => ({
   }
 }));
 
-vi.mock('../../src/analytics/infrastructure/assembler/analytics-assembler', () => ({
+vi.mock('../../../src/analytics/infrastructure/assembler/analytics-assembler', () => ({
   AnalyticsAssembler: {
     mapRawToPlantMetric: vi.fn(),
     mapSensorData: vi.fn()

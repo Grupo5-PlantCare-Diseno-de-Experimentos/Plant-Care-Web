@@ -1,10 +1,10 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import SignUp from '../../src/auth/pages/sign-up.component.vue';
+import SignUp from '../../../src/auth/pages/sign-up.component.vue';
 
 const signUp = vi.fn().mockResolvedValue(undefined);
 
-vi.mock('../../src/auth/store/authStore', () => ({
+vi.mock('../../../src/auth/store/authStore', () => ({
   useAuthStore: () => ({
     signUp,
     isSignedIn: false

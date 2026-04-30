@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import PlantAnalyticsView from '../../src/plants/presentation/components/PlantAnalyticsView.vue';
+import WateringScheduleCard from '../../../src/plants/presentation/components/WateringScheduleCard.vue';
 
 const plant = {
   id: 1,
@@ -17,27 +17,26 @@ const plant = {
     {
       id: 1,
       plantId: 1,
-      soilMoisturePct: 55,
+      soilMoisturePct: 50,
       temperatureC: 22,
       lightLevel: 500,
-      airHumidityPct: 60,
+      airHumidityPct: 55,
       battery: 80,
       timestamp: new Date().toISOString()
     }
   ],
-  wateringLogs: [
-    { id: 1, plantId: 1, wateredAt: new Date().toISOString() }
-  ],
-  createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+  wateringLogs: [],
+  createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString()
 };
 
-describe('PlantAnalyticsView', () => {
-  it('renders analytics stats', () => {
-    const wrapper = mount(PlantAnalyticsView, {
+describe('WateringScheduleCard', () => {
+  it('emits water event', async () => {
+    const wrapper = mount(WateringScheduleCard, {
       props: { plant }
     });
 
-    expect(wrapper.findAll('.stat-card').length).toBeGreaterThan(0);
+    await wrapper.find('button').trigger('click');
+    expect(wrapper.emitted('water')).toBeTruthy();
   });
 });

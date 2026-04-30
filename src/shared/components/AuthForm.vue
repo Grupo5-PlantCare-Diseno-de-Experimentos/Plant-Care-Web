@@ -43,6 +43,7 @@ const password = ref('');
 const { t } = useI18n();
 
 const handleSubmit = () => {
+  if (!email.value.trim() || !password.value.trim()) return;
   emit('submit-login', { email: email.value, password: password.value });
 };
 </script>

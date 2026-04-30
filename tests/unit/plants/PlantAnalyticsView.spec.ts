@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import PlantHealthCard from '../../src/plants/presentation/components/PlantHealthCard.vue';
+import PlantAnalyticsView from '../../../src/plants/presentation/components/PlantAnalyticsView.vue';
 
 const plant = {
   id: 1,
@@ -17,7 +17,7 @@ const plant = {
     {
       id: 1,
       plantId: 1,
-      soilMoisturePct: 60,
+      soilMoisturePct: 55,
       temperatureC: 22,
       lightLevel: 500,
       airHumidityPct: 60,
@@ -25,17 +25,19 @@ const plant = {
       timestamp: new Date().toISOString()
     }
   ],
-  wateringLogs: [],
-  createdAt: new Date().toISOString(),
+  wateringLogs: [
+    { id: 1, plantId: 1, wateredAt: new Date().toISOString() }
+  ],
+  createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
   updatedAt: new Date().toISOString()
 };
 
-describe('PlantHealthCard', () => {
-  it('renders health score', () => {
-    const wrapper = mount(PlantHealthCard, {
+describe('PlantAnalyticsView', () => {
+  it('renders analytics stats', () => {
+    const wrapper = mount(PlantAnalyticsView, {
       props: { plant }
     });
 
-    expect(wrapper.text()).toContain('%');
+    expect(wrapper.findAll('.stat-card').length).toBeGreaterThan(0);
   });
 });

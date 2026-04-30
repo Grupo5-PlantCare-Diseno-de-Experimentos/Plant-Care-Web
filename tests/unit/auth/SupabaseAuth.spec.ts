@@ -1,14 +1,14 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
-import SupabaseAuth from '../../src/auth/components/SupabaseAuth.vue';
+import SupabaseAuth from '../../../src/auth/components/SupabaseAuth.vue';
 
 const signIn = vi.fn().mockResolvedValue(undefined);
 const signUp = vi.fn().mockResolvedValue(undefined);
 const signOut = vi.fn().mockResolvedValue(undefined);
 const user = ref(null);
 
-vi.mock('../../src/auth/services/supabase-auth', () => ({
+vi.mock('../../../src/auth/services/supabase-auth', () => ({
   default: () => ({
     user,
     signIn,

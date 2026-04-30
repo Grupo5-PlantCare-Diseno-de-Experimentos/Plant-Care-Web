@@ -1,6 +1,6 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import CompleteProfile from '../../src/Profile/Components/CompleteProfile.vue';
+import CompleteProfile from '../../../src/Profile/Components/CompleteProfile.vue';
 
 const push = vi.fn();
 
@@ -10,7 +10,7 @@ vi.mock('vue-router', () => ({
 
 const updateProfile = vi.fn().mockResolvedValue(undefined);
 
-vi.mock('../../src/Profile/application/profile.store', () => ({
+vi.mock('../../../src/Profile/application/profile.store', () => ({
   useProfileStore: () => ({
     updateProfile
   })

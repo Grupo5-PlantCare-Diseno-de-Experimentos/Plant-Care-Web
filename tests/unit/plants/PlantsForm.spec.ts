@@ -1,6 +1,6 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import PlantsForm from '../../src/plants/presentation/views/PlantsForm.vue';
+import PlantsForm from '../../../src/plants/presentation/views/PlantsForm.vue';
 
 const push = vi.fn();
 
@@ -9,7 +9,7 @@ vi.mock('vue-router', () => ({
   useRoute: () => ({ params: {} })
 }));
 
-vi.mock('../../src/auth/store/authStore', () => ({
+vi.mock('../../../src/auth/store/authStore', () => ({
   useAuthStore: () => ({
     isSignedIn: true,
     token: 'token',
@@ -21,7 +21,7 @@ vi.mock('../../src/auth/store/authStore', () => ({
 const createPlant = vi.fn().mockResolvedValue({ data: { id: 99 } });
 const waterPlant = vi.fn().mockResolvedValue({});
 
-vi.mock('../../src/plants/infrastructure/plants.services', () => ({
+vi.mock('../../../src/plants/infrastructure/plants.services', () => ({
   PlantsService: vi.fn().mockImplementation(() => ({
     getPlantById: vi.fn(),
     updatePlant: vi.fn(),

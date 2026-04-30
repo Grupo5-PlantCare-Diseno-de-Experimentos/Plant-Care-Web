@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import Profile from '../../src/Profile/Components/Profile.vue';
+import Profile from '../../../src/Profile/Components/Profile.vue';
 
-vi.mock('../../src/auth/store/authStore', () => ({
+vi.mock('../../../src/auth/store/authStore', () => ({
   useAuthStore: () => ({
     isSignedIn: true,
     userEmail: 'jane@example.com'
@@ -26,7 +26,7 @@ const profileStore = {
   $reset: vi.fn()
 };
 
-vi.mock('../../src/Profile/application/profile.store', () => ({
+vi.mock('../../../src/Profile/application/profile.store', () => ({
   useProfileStore: () => profileStore
 }));
 

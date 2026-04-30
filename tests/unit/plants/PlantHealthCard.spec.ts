@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import WateringScheduleCard from '../../src/plants/presentation/components/WateringScheduleCard.vue';
+import PlantHealthCard from '../../../src/plants/presentation/components/PlantHealthCard.vue';
 
 const plant = {
   id: 1,
@@ -17,10 +17,10 @@ const plant = {
     {
       id: 1,
       plantId: 1,
-      soilMoisturePct: 50,
+      soilMoisturePct: 60,
       temperatureC: 22,
       lightLevel: 500,
-      airHumidityPct: 55,
+      airHumidityPct: 60,
       battery: 80,
       timestamp: new Date().toISOString()
     }
@@ -30,13 +30,12 @@ const plant = {
   updatedAt: new Date().toISOString()
 };
 
-describe('WateringScheduleCard', () => {
-  it('emits water event', async () => {
-    const wrapper = mount(WateringScheduleCard, {
+describe('PlantHealthCard', () => {
+  it('renders health score', () => {
+    const wrapper = mount(PlantHealthCard, {
       props: { plant }
     });
 
-    await wrapper.find('button').trigger('click');
-    expect(wrapper.emitted('water')).toBeTruthy();
+    expect(wrapper.text()).toContain('%');
   });
 });

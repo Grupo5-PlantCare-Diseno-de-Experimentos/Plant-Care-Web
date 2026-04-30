@@ -1,12 +1,12 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
-import Login from '../../src/auth/pages/Login.vue';
+import Login from '../../../src/auth/pages/Login.vue';
 
 const login = vi.fn().mockResolvedValue(undefined);
 const push = vi.fn();
 
-vi.mock('../../src/auth/store/authStore', () => ({
+vi.mock('../../../src/auth/store/authStore', () => ({
   useAuthStore: () => ({
     login,
     isLoading: false,
