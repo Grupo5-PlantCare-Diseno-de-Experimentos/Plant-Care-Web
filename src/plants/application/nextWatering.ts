@@ -77,7 +77,7 @@ export function computeNextWatering(plant: Plant): ComputeResult {
       const newest = timePoints[0]!;
       
       const msPerDay = 1000 * 60 * 60 * 24;
-      const timeSpanDays = Math.max((oldest.time - newest.time) / msPerDay, 0.01);
+      const timeSpanDays = Math.max((newest.time - oldest.time) / msPerDay, 0.01);
       const soilDelta = newest.soil - oldest.soil; // negative = drying
       dryingRate = Math.abs(soilDelta) / timeSpanDays; // %/day
 

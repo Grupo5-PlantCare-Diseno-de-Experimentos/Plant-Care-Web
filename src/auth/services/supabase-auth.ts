@@ -4,22 +4,26 @@ import { supabase } from '../../utils/supabase';
 
 export default function useSupabaseAuth() {
   const user = ref<User | null>(null);
+  let unsubscribeFromAuth: (() => void) | null = null;
 
   const loadUser = async () => {
-    const { data } = await supabase.auth.getUser();
-    user.value = data.user ?? null;
+    const { data, error } = await supabase.auth.getUser();
+    user.value = error ? null : data.user ?? null;
   };
 
   onMounted(() => {
     void loadUser();
-  });
 
-  const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-    user.value = session?.user ?? null;
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      user.value = session?.user ?? null;
+    });
+
+    unsubscribeFromAuth = () => authListener.subscription.unsubscribe();
   });
 
   onUnmounted(() => {
-    authListener.subscription.unsubscribe();
+    unsubscribeFromAuth?.();
+    unsubscribeFromAuth = null;
   });
 
   const signIn = async (email: string, password: string): Promise<void> => {

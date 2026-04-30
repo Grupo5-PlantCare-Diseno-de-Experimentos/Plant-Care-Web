@@ -164,7 +164,7 @@ const onSubmit = async () => {
       const newPlantId = createResponse.data.id;
       if (newPlantId) {
         const now = new Date().toISOString();
-        await plantsService.waterPlant(newPlantId, now);
+        await plantsService.waterPlant(newPlantId, userId, undefined, now);
       }
     }
     router.push('/plants');

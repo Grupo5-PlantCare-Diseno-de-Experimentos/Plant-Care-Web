@@ -9,9 +9,8 @@ import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import { PlantsService } from '../../infrastructure/plants.services';
 import { AnalyticsService } from '../../../analytics/infrastructure/analytics.service';
-import { supabase } from '../../../utils/supabase';
 import { useAuthStore } from '../../../auth/store/authStore';
-import type { Plant as PlantEntity } from '../../domain/model/plants.entity';
+import type { Metric, Plant as PlantEntity } from '../../domain/model/plants.entity';
 import type { SensorData } from '../../../analytics/domain/model/analytics.entity';
 import { useI18n } from 'vue-i18n';
 
@@ -32,27 +31,12 @@ const plantId = Number(route.params.id);
 
 onMounted(async () => {
   try {
-    const { data: rawMetrics, error: rawError } = await supabase
-      .from('plant_metrics')
-      .select('*')
-      .order('timestamp', { ascending: false });
-
-    console.debug('[PlantDetail DEBUG] Direct Supabase query result:', {
-      rowCount: rawMetrics ? rawMetrics.length : 0,
-      error: rawError,
-      firstRow: rawMetrics?.[0],
-      allRows: rawMetrics
-    });
-
     const [plantResponse, metricsResponse] = await Promise.all([
       plantsService.getPlantById(plantId),
       analyticsService.getAllSensorData()
     ]);
     plant.value = plantResponse.data;
     generalMetrics.value = metricsResponse.data;
-    console.debug('[PlantDetail] loaded plant:', plant.value ? plant.value.id : null);
-    console.debug('[PlantDetail] generalMetrics count:', Array.isArray(generalMetrics.value) ? generalMetrics.value.length : 0);
-    console.debug('[PlantDetail] generalMetrics[0]:', generalMetrics.value?.[0]);
   } catch (err) {
     console.error('Error loading data:', err);
     plant.value = null;
@@ -61,29 +45,47 @@ onMounted(async () => {
   }
 });
 
+type MetricSource = Metric | SensorData | Record<string, unknown>;
+
+const parseNullableNumber = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(String(value));
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
+const getFirstPresent = (source: MetricSource, keys: string[]): unknown => {
+  const record = source as Record<string, unknown>;
+  for (const key of keys) {
+    if (record[key] !== undefined && record[key] !== null) return record[key];
+  }
+  return null;
+};
+
+const getTimestamp = (source: MetricSource): string | null => {
+  const timestamp = getFirstPresent(source, ['timestamp', 'created_at', 'createdAt']);
+  return typeof timestamp === 'string' ? timestamp : null;
+};
+
 const latestMetric = computed(() => {
-  if (generalMetrics.value.length === 0) return null;
-  const sorted = [...generalMetrics.value].sort((a, b) =>
-    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  const plantMetrics = plant.value?.metrics ?? [];
+  const metricSource: MetricSource[] = plantMetrics.length > 0
+    ? plantMetrics
+    : generalMetrics.value;
+
+  if (metricSource.length === 0) return null;
+
+  const sorted = [...metricSource].sort((a, b) =>
+    new Date(getTimestamp(b) ?? '').getTime() - new Date(getTimestamp(a) ?? '').getTime()
   );
-  const raw = sorted[0] as any;
-  const getFirst = (obj: any, keys: string[]) => {
-    for (const k of keys) {
-      if (obj[k] !== undefined && obj[k] !== null) return obj[k];
-    }
-    return null;
-  };
-  const parseNum = (v: any) => {
-    if (v === null || v === undefined || v === '') return null;
-    const n = Number(String(v));
-    return Number.isNaN(n) ? null : n;
-  };
+  const raw = sorted[0];
+  if (!raw) return null;
+
   return {
-    airTemperatureC: parseNum(getFirst(raw, ['temperature_c', 'temperature', 'temperatureC', 'airTemperatureC'])),
-    airHumidityPct: parseNum(getFirst(raw, ['air_humidity_pct', 'air_humidity', 'airHumidityPct', 'airHumidity'])),
-    lightIntensityLux: parseNum(getFirst(raw, ['light_level', 'light', 'lightLevel', 'lightIntensityLux'])),
-    soilMoisturePct: parseNum(getFirst(raw, ['soil_moisture_pct', 'soil_moisture', 'soilMoisturePct'])),
-    timestamp: getFirst(raw, ['timestamp', 'created_at', 'createdAt'])
+    airTemperatureC: parseNullableNumber(getFirstPresent(raw, ['temperature_c', 'temperature', 'temperatureC', 'airTemperatureC'])),
+    airHumidityPct: parseNullableNumber(getFirstPresent(raw, ['air_humidity_pct', 'air_humidity', 'airHumidityPct', 'airHumidity'])),
+    lightIntensityLux: parseNullableNumber(getFirstPresent(raw, ['light_level', 'light', 'lightLevel', 'lightIntensityLux'])),
+    soilMoisturePct: parseNullableNumber(getFirstPresent(raw, ['soil_moisture_pct', 'soil_moisture', 'soilMoisturePct'])),
+    timestamp: getTimestamp(raw)
   };
 });
 

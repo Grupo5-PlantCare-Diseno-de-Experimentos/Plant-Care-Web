@@ -2,6 +2,7 @@ import { IAuthService } from '../ports/IAuthService';
 import { UserEntity } from '../domain/UserEntity';
 import { InvalidCredentialsException, EmailNotConfirmedException } from '../domain/AuthExceptions';
 import { supabase } from '../../utils/supabase';
+import type { User } from '@supabase/supabase-js';
 
 export class SupabaseAuthAdapter implements IAuthService {
   async login(email: string, password: string): Promise<UserEntity> {
@@ -59,20 +60,17 @@ export class SupabaseAuthAdapter implements IAuthService {
     const requiresConfirmation =
       !data.session && (data.user.identities?.length === 0 || !data.user.email_confirmed_at);
 
-    const entity = this.mapToUserEntity(data.user);
-    // Attach a flag so authStore can show the right message
-    (entity as any).requiresEmailConfirmation = requiresConfirmation;
-
-    return entity;
+    return this.mapToUserEntity(data.user, requiresConfirmation);
   }
 
-  private mapToUserEntity(supabaseUser: any): UserEntity {
+  private mapToUserEntity(supabaseUser: User, requiresEmailConfirmation = false): UserEntity {
     return new UserEntity(
       supabaseUser.id,
       supabaseUser.email || '',
       supabaseUser.role || 'authenticated',
       supabaseUser.is_anonymous || false,
-      supabaseUser.last_sign_in_at ? new Date(supabaseUser.last_sign_in_at) : null
+      supabaseUser.last_sign_in_at ? new Date(supabaseUser.last_sign_in_at) : null,
+      requiresEmailConfirmation
     );
   }
 }

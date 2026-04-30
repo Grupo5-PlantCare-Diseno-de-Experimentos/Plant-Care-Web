@@ -17,11 +17,10 @@ const { t } = useI18n();
 const activeButton = ref<ActiveButton>(null);
 const showMenu = ref(false);
 const closingMenu = ref(false);
+let closeMenuTimer: ReturnType<typeof setTimeout> | null = null;
 
 
 const isSignedIn = computed(() => {
-  console.log('Estado de isSignedIn:', authenticationStore.isSignedIn);
-
   return authenticationStore.isSignedIn;
 });
 
@@ -31,10 +30,15 @@ const currentUsername = computed(() => {
 
 
 const closeMenuWithDelay = () => {
+  if (closeMenuTimer) {
+    clearTimeout(closeMenuTimer);
+  }
+
   closingMenu.value = true;
-  setTimeout(() => {
+  closeMenuTimer = setTimeout(() => {
     showMenu.value = false;
     closingMenu.value = false;
+    closeMenuTimer = null;
   }, 300);
 };
 
@@ -51,8 +55,12 @@ const onSignUp = () => {
   closeMenuWithDelay();
 };
 
-const onSignOut = () => {
-  authenticationStore.logout();
+const onSignOut = async () => {
+  try {
+    await authenticationStore.logout();
+  } catch (error) {
+    console.error('Sign out failed:', error);
+  }
 };
 
 const updateActiveButton = () => {
@@ -77,7 +85,7 @@ const rootElement = ref<HTMLElement | null>(null);
 
 const handleClickOutside = (event: MouseEvent) => {
 
-  if (rootElement.value && !rootElement.value.contains(event.target as Node)) {
+  if (showMenu.value && rootElement.value && !rootElement.value.contains(event.target as Node)) {
     closeMenuWithDelay();
   }
 };
@@ -91,6 +99,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside);
+  if (closeMenuTimer) {
+    clearTimeout(closeMenuTimer);
+  }
 });
 
 

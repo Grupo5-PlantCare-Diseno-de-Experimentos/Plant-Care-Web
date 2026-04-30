@@ -41,7 +41,7 @@ describe('PlantsForm', () => {
     await flushPromises();
 
     expect(createPlant).toHaveBeenCalled();
-    expect(waterPlant).toHaveBeenCalled();
+    expect(waterPlant).toHaveBeenCalledWith(99, 'user-1', undefined, expect.any(String));
     expect(push).toHaveBeenCalledWith('/plants');
   });
 });
