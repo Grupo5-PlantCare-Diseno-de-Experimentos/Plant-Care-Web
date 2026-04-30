@@ -7,45 +7,75 @@ import type {
 	AchievementsResponse,
 } from '../model/profile.entity';
 
+type AuthenticatedUser = {
+	id: string;
+	email?: string;
+	created_at: string;
+};
+
+type ProfileRow = {
+	full_name?: string | null;
+	phone?: string | null;
+	bio?: string | null;
+	location?: string | null;
+	avatar_url?: string | null;
+	join_date?: string | null;
+};
+
+type ProfilePersistence = {
+	full_name?: string;
+	phone?: string;
+	bio?: string;
+	location?: string;
+};
+
+const AVATAR_BUCKET = 'avatars';
+const MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024;
+const AVATAR_EXTENSIONS: Record<string, string> = {
+	'image/jpeg': 'jpg',
+	'image/png': 'png',
+};
+
 class ProfileService {
-	private async getUserId(): Promise<string> {
+	private async getAuthenticatedUser(): Promise<AuthenticatedUser> {
 		const { data: { user }, error } = await supabase.auth.getUser();
 		if (error || !user) throw new Error('User not authenticated');
+		return user;
+	}
+
+	private async getUserId(): Promise<string> {
+		const user = await this.getAuthenticatedUser();
 		return user.id;
 	}
 
 	async getProfile(): Promise<UserProfile> {
-		const userId = await this.getUserId();
-		
-		// Get auth user details
-		const { data: authUser, error: authError } = await supabase.auth.getUser();
-		if (authError || !authUser.user) throw authError || new Error('Auth user not found');
+		const user = await this.getAuthenticatedUser();
 		
 		// Get profile details
 		const { data, error } = await supabase
 			.from('profiles')
 			.select('*')
-			.eq('id', userId)
+			.eq('id', user.id)
 			.maybeSingle();
 
 		if (error) {
 			throw error;
 		}
 
-		const profileData = data || {};
+		const profileData = (data || {}) as ProfileRow;
 		
 		// Calculate stats from actual data
-		const stats = await this.calculateStats(userId);
+		const stats = await this.calculateStats(user.id);
 
 		return {
-			email: authUser.user.email || '',
-			username: authUser.user.email?.split('@')[0] || 'user',
+			email: user.email || '',
+			username: user.email?.split('@')[0] || 'user',
 			fullName: profileData.full_name || '',
 			phone: profileData.phone || '',
 			bio: profileData.bio || '',
 			location: profileData.location || '',
 			avatarUrl: profileData.avatar_url || '',
-			joinDate: profileData.join_date || authUser.user.created_at,
+			joinDate: profileData.join_date || user.created_at,
 			stats: stats
 		};
 	}
@@ -66,13 +96,12 @@ class ProfileService {
 			}
 
 			// Count watering logs (sessions)
-			const { data: wateringLogs, error: logsError } = await supabase
+			const { count: wateringSessions, error: logsError } = await supabase
 				.from('watering_logs')
-				.select('id', { count: 'exact' })
+				.select('id', { count: 'exact', head: true })
 				.eq('user_id', userId);
 
 			if (logsError) throw logsError;
-			const wateringSessions = wateringLogs?.length || 0;
 
 			// Calculate success rate: percentage of plants in healthy status
 			let successRate = 100;
@@ -83,11 +112,10 @@ class ProfileService {
 
 			return {
 				totalPlants,
-				wateringSessions,
+				wateringSessions: wateringSessions || 0,
 				successRate
 			};
-		} catch (error) {
-			console.error('Error calculating stats:', error);
+		} catch {
 			return { totalPlants: 0, wateringSessions: 0, successRate: 100 };
 		}
 	}
@@ -95,11 +123,7 @@ class ProfileService {
 	async updateProfile(data: ProfileUpdateRequest): Promise<UserProfile> {
 		const userId = await this.getUserId();
 		
-		const updateData: any = {};
-		if (data.fullName !== undefined) updateData.full_name = data.fullName;
-		if (data.phone !== undefined) updateData.phone = data.phone;
-		if (data.bio !== undefined) updateData.bio = data.bio;
-		if (data.location !== undefined) updateData.location = data.location;
+		const updateData = toPersistence(data);
 
 		const { error } = await supabase
 			.from('profiles')
@@ -112,21 +136,19 @@ class ProfileService {
 
 	async uploadAvatar(file: File): Promise<AvatarUploadResponse> {
 		const userId = await this.getUserId();
-		const fileExt = file.name.split('.').pop();
-		const filePath = `${userId}-${Math.random()}.${fileExt}`;
+		const fileExt = validateAvatar(file);
+		const filePath = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
 		
 		// Note: Requires a storage bucket named 'avatars'
 		const { error: uploadError } = await supabase.storage
-			.from('avatars')
+			.from(AVATAR_BUCKET)
 			.upload(filePath, file);
 
 		if (uploadError) throw uploadError;
 
 		const { data: { publicUrl } } = supabase.storage
-			.from('avatars')
+			.from(AVATAR_BUCKET)
 			.getPublicUrl(filePath);
-
-		await this.updateProfile({} as any); // just an empty trigger or we can directly update avatar_url
 		
 		const { error: updateError } = await supabase
 			.from('profiles')
@@ -198,3 +220,25 @@ class ProfileService {
 }
 
 export const profileService = new ProfileService();
+
+function toPersistence(data: ProfileUpdateRequest): ProfilePersistence {
+	const updateData: ProfilePersistence = {};
+	if (data.fullName !== undefined) updateData.full_name = data.fullName.trim();
+	if (data.phone !== undefined) updateData.phone = data.phone.trim();
+	if (data.bio !== undefined) updateData.bio = data.bio.trim();
+	if (data.location !== undefined) updateData.location = data.location.trim();
+	return updateData;
+}
+
+function validateAvatar(file: File): string {
+	const extension = AVATAR_EXTENSIONS[file.type];
+	if (!extension) {
+		throw new Error('Unsupported avatar file type');
+	}
+
+	if (file.size > MAX_AVATAR_SIZE_BYTES) {
+		throw new Error('Avatar file is too large');
+	}
+
+	return extension;
+}

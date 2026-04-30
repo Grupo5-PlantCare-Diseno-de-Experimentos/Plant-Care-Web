@@ -1,7 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { UserProfile, UserAchievement, AchievementsResponse } from '../model/profile.entity';
+import type { UserProfile, UserAchievement, AchievementsResponse, ProfileUpdateRequest } from '../model/profile.entity';
 import { profileService } from '../infrastructure/profile.service';
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  return error instanceof Error ? error.message : fallback;
+};
 
 export const useProfileStore = defineStore('profile', () => {
   const profile = ref<UserProfile | null>(null);
@@ -14,11 +18,9 @@ export const useProfileStore = defineStore('profile', () => {
     error.value = null;
     try {
       const userProfile = await profileService.getProfile();
-      console.log('[ProfileStore] Profile loaded:', userProfile);
       profile.value = userProfile;
-    } catch (e: any) {
-      console.error('[ProfileStore] Error loading profile:', e);
-      error.value = e.message || 'Error al cargar el perfil';
+    } catch (e: unknown) {
+      error.value = getErrorMessage(e, 'Error al cargar el perfil');
       profile.value = null;
     } finally {
       loading.value = false;
@@ -29,19 +31,18 @@ export const useProfileStore = defineStore('profile', () => {
     try {
       const response: AchievementsResponse = await profileService.getAchievements();
       achievements.value = response.achievements || [];
-    } catch (e: any) {
-      console.warn('Error al cargar logros:', e.message);
+    } catch {
       achievements.value = [];
     }
   };
 
-  const updateProfile = async (data: any) => {
+  const updateProfile = async (data: ProfileUpdateRequest) => {
     try {
       const updated = await profileService.updateProfile(data);
       profile.value = updated;
       return updated;
-    } catch (e: any) {
-      error.value = e.message || 'Error al actualizar el perfil';
+    } catch (e: unknown) {
+      error.value = getErrorMessage(e, 'Error al actualizar el perfil');
       throw e;
     }
   };
@@ -53,8 +54,8 @@ export const useProfileStore = defineStore('profile', () => {
         profile.value.avatarUrl = response.avatarUrl;
       }
       return response;
-    } catch (e: any) {
-      error.value = e.message || 'Error al cargar el avatar';
+    } catch (e: unknown) {
+      error.value = getErrorMessage(e, 'Error al cargar el avatar');
       throw e;
     }
   };

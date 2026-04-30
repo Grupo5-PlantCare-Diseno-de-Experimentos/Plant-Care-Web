@@ -96,13 +96,6 @@ onMounted(async () => {
   }
 });
 
-const debugInfo = computed(() => ({
-  authStoreIsSignedIn: authStore.isSignedIn,
-  profileStoreProfile: profileStore.profile,
-  profileStoreLoading: profileStore.loading,
-  profileStoreError: profileStore.error
-}));
-
 const handleEdit = () => {
   formData.value = {
     fullName: profileStore.profile?.fullName || '',
@@ -117,8 +110,8 @@ const handleSave = async () => {
   try {
     await profileStore.updateProfile(formData.value);
     isEditing.value = false;
-  } catch (error) {
-    console.error('Error al guardar perfil:', error);
+  } catch {
+    // Store exposes the user-facing error state.
   }
 };
 
@@ -137,8 +130,8 @@ const handleChangeAvatar = () => {
       avatarFile.value = file;
       try {
         await profileStore.uploadAvatar(file);
-      } catch (error) {
-        console.error('Error al cargar avatar:', error);
+      } catch {
+        // Store exposes the user-facing error state.
       }
     }
   };
@@ -148,9 +141,6 @@ const handleChangeAvatar = () => {
 
 <template>
   <div class="pp-wrap">
-    <!-- DEBUG (hidden) -->
-    <div style="display:none"><pre>{{ JSON.stringify(debugInfo, null, 2) }}</pre></div>
-
     <!-- Loading -->
     <div v-if="profileStore.loading" class="pp-loading">
       <div class="pp-loading-core">

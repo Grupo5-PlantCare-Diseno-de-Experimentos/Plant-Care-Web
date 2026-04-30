@@ -32,9 +32,9 @@ const handleSave = async () => {
     setTimeout(() => {
       router.push('/dashboard');
     }, 1500);
-  } catch (error: any) {
-    console.error('Error updating profile:', error);
-    toast.add({ severity: 'error', summary: t('completeProfile.toast.error'), detail: error.message || t('completeProfile.toast.failed'), life: 4000 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : t('completeProfile.toast.failed');
+    toast.add({ severity: 'error', summary: t('completeProfile.toast.error'), detail: message, life: 4000 });
   } finally {
     isLoading.value = false;
   }
