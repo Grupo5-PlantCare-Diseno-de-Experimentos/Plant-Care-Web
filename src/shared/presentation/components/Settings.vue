@@ -72,8 +72,8 @@ watch(weeklyReports, (v) => localStorage.setItem('pref_weekly', String(v)));
 watch(pushNotifications, (v) => localStorage.setItem('pref_push', String(v)));
 
 // ── Account ──
-const userEmail = computed(() => authStore.userEmail || localStorage.getItem('email') || '—');
-const userId = computed(() => authStore.userId || localStorage.getItem('userUuid') || '—');
+const userEmail = computed(() => authStore.userEmail || '—');
+const userId = computed(() => authStore.userId || '—');
 
 // ── Data & Privacy ──
 const showClearConfirm = ref(false);

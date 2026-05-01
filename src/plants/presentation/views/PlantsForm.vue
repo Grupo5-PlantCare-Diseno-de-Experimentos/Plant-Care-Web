@@ -134,7 +134,7 @@ const onSubmit = async () => {
     return;
   }
 
-  const userId = authStore.userId || localStorage.getItem('userUuid') || '';
+  const userId = authStore.userId || '';
   if (!userId) {
     serverError.message = t('plantForm.error.noUserId');
     return;

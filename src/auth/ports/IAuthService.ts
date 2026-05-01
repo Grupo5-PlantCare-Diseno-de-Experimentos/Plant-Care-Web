@@ -5,4 +5,5 @@ export abstract class IAuthService {
   abstract logout(): Promise<void>;
   abstract getCurrentUser(): Promise<UserEntity | null>;
   abstract signUp(email: string, password: string): Promise<UserEntity>;
+  abstract getSessionToken(): Promise<string | null>;
 }

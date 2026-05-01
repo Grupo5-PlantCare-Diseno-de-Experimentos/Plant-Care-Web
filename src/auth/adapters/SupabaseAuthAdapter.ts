@@ -63,6 +63,11 @@ export class SupabaseAuthAdapter implements IAuthService {
     return this.mapToUserEntity(data.user, requiresConfirmation);
   }
 
+  async getSessionToken(): Promise<string | null> {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
+  }
+
   private mapToUserEntity(supabaseUser: User, requiresEmailConfirmation = false): UserEntity {
     return new UserEntity(
       supabaseUser.id,

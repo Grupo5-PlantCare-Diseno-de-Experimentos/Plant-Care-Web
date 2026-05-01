@@ -1,20 +1,19 @@
 import type { Analytics, SensorData } from "../domain/model/analytics.entity";
 import { supabase } from "../../utils/supabase";
-import type { AxiosResponse } from "axios";
 import { AnalyticsAssembler } from "./assembler/analytics-assembler";
 
+type ServiceResponse<T> = {
+    data: T;
+};
+
 export class AnalyticsService {
-    private wrapResponse<T>(data: T): AxiosResponse<T> {
+    private wrapResponse<T>(data: T): ServiceResponse<T> {
         return {
-            data,
-            status: 200,
-            statusText: 'OK',
-            headers: {},
-            config: {} as any
+            data
         };
     }
 
-    async getAllSensorData(): Promise<AxiosResponse<SensorData[]>> {
+    async getAllSensorData(): Promise<ServiceResponse<SensorData[]>> {
         // Fetch all metrics. This query does not require the current user
         // because IoT metrics are general and may have null plant_id.
         // If your RLS policies require authenticated requests, configure them
@@ -28,7 +27,7 @@ export class AnalyticsService {
         return this.wrapResponse(data as any[]);
     }
 
-    async getSensorDataByDevice(deviceId: string): Promise<AxiosResponse<SensorData[]>> {
+    async getSensorDataByDevice(deviceId: string): Promise<ServiceResponse<SensorData[]>> {
         if (!deviceId || deviceId === 'undefined' || deviceId === 'null') {
             throw new Error('Invalid deviceId provided to getSensorDataByDevice');
         }
@@ -43,7 +42,7 @@ export class AnalyticsService {
         return this.wrapResponse(data as any[]);
     }
 
-    async importSensorData(sensorData: Omit<SensorData, 'id'>[]): Promise<AxiosResponse<any>> {
+    async importSensorData(sensorData: Omit<SensorData, 'id'>[]): Promise<ServiceResponse<any>> {
         const formattedData = sensorData.map((d: any) => ({
             plant_id: d.plantId,
             timestamp: d.timestamp || new Date().toISOString(),
@@ -63,7 +62,7 @@ export class AnalyticsService {
         return this.wrapResponse(data);
     }
 
-    async getAnalyticsByUser(userId: string): Promise<AxiosResponse<Analytics[]>> {
+    async getAnalyticsByUser(userId: string): Promise<ServiceResponse<Analytics[]>> {
         if (!userId || userId === 'undefined' || userId === 'null') {
             throw new Error('Invalid userId provided to getAnalyticsByUser');
         }
@@ -73,7 +72,7 @@ export class AnalyticsService {
         return this.wrapResponse(analytics);
     }
 
-    async getAnalyticsByPlant(plantId: number, deviceId?: string): Promise<AxiosResponse<Analytics>> {
+    async getAnalyticsByPlant(plantId: number, deviceId?: string): Promise<ServiceResponse<Analytics>> {
         let sensorData: SensorData[];
         
         if (deviceId) {
@@ -98,15 +97,17 @@ export class AnalyticsService {
         return AnalyticsAssembler.fromPlantMetrics(plantId, metrics, deviceId);
     }
 
-    async getRecentAverages(limit: number = 5): Promise<AxiosResponse<any>> {
-        const res = await this.getAllSensorData();
+    async getRecentAverages(limit: number = 5): Promise<ServiceResponse<any>> {
+        const { data, error } = await supabase
+            .from('plant_metrics')
+            .select('*')
+            .order('timestamp', { ascending: false })
+            .limit(limit);
+
+        if (error) throw error;
         
-        const sortedData = [...res.data].sort((a: any, b: any) => 
-            new Date(b.timestamp || b.created_at).getTime() - new Date(a.timestamp || a.created_at).getTime()
-        );
-        
-        const recentData = sortedData.slice(0, limit);
-        
+        const recentData = data as any[];
+
         if (recentData.length === 0) {
             return this.wrapResponse({
                 avgTemperature: 0,

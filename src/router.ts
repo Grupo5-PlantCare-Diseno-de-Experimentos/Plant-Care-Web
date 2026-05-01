@@ -105,7 +105,6 @@ router.beforeEach(async (to, _from, next) => {
     /* noop */
   }
 
-  // Verify Supabase session to avoid trusting stale localStorage tokens
   let hasValidSession = false;
   try {
     const { data: { session } } = await supabase.auth.getSession();
@@ -118,10 +117,6 @@ router.beforeEach(async (to, _from, next) => {
   const isAuth = !!authStore.user && !!authStore.token && hasValidSession;
 
   if (!hasValidSession) {
-    // Cleanup any leftover localStorage tokens to prevent false positives
-    localStorage.removeItem('token');
-    localStorage.removeItem('userUuid');
-    localStorage.removeItem('email');
     // also clear authStore.token to keep in-memory state consistent
     authStore.token = null as any;
   }

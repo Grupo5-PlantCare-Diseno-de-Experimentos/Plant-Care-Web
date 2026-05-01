@@ -13,7 +13,6 @@
   "dependencies": {
     "@primeuix/themes": "^1.2.5",
     "@supabase/supabase-js": "^2.104.1",
-    "axios": "^1.12.2",
     "firebase": "^12.6.0",
     "json-server": "^1.0.0-beta.3",
     "pinia": "^3.0.3",
@@ -24,7 +23,6 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
-    "@types/axios": "^0.9.36",
     "@types/js-cookie": "^3.0.6",
     "@types/node": "^24.6.0",
     "@vitejs/plugin-vue": "^6.0.1",

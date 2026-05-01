@@ -18,9 +18,6 @@ export default defineConfig({
             if (id.includes('pinia')) {
               return 'pinia-vendor';
             }
-            if (id.includes('axios')) {
-              return 'axios-vendor';
-            }
             return 'vendor';
           }
         }
