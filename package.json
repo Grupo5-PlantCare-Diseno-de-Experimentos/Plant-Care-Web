@@ -13,6 +13,7 @@
   "dependencies": {
     "@primeuix/themes": "^1.2.5",
     "@supabase/supabase-js": "^2.104.1",
+    "@vercel/speed-insights": "^2.0.0",
     "firebase": "^12.6.0",
     "json-server": "^1.0.0-beta.3",
     "pinia": "^3.0.3",

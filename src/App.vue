@@ -44,6 +44,9 @@ import { useRoute } from 'vue-router';
 import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { injectSpeedInsights } from "@vercel/speed-insights";
+
+
 const route = useRoute();
 const isSidebarOpen = ref(true);
 const isMobile = ref(false);
@@ -72,6 +75,9 @@ const handleMediaChange = () => {
     isSidebarOpen.value = false;
   }
 };
+
+injectSpeedInsights();
+
 
 onMounted(() => {
   mediaQuery = window.matchMedia('(max-width: 1024px)');

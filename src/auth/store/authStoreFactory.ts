@@ -5,7 +5,7 @@ import { LoginUseCase } from '../features/LoginUseCase';
 import type { IAuthService } from '../ports/IAuthService';
 
 export interface IProfileService {
-  createProfile(userId: string): Promise<any>;
+  createProfile(userId: string): Promise<unknown>;
 }
 
 export const setupAuthStore = (adapter: IAuthService, profileService: IProfileService) => {
@@ -13,7 +13,7 @@ export const setupAuthStore = (adapter: IAuthService, profileService: IProfileSe
     const loginUseCase = new LoginUseCase(adapter);
 
     const user = ref<UserEntity | null>(null);
-    const token = ref<string | null>(null);
+    const token = ref<string | null>(localStorage.getItem('token'));
     const isLoading = ref<boolean>(false);
     const error = ref<string | null>(null);
 
@@ -23,9 +23,12 @@ export const setupAuthStore = (adapter: IAuthService, profileService: IProfileSe
 
     const clearStoredAuth = () => {
       token.value = null;
+      localStorage.removeItem('token');
+      localStorage.removeItem('userUuid');
+      localStorage.removeItem('email');
     };
 
-    const persistSession = async () => {
+    const persistSession = async (authenticatedUser: UserEntity) => {
       const sessionToken = await adapter.getSessionToken();
 
       if (!sessionToken) {
@@ -34,6 +37,9 @@ export const setupAuthStore = (adapter: IAuthService, profileService: IProfileSe
       }
 
       token.value = sessionToken;
+      localStorage.setItem('token', sessionToken);
+      localStorage.setItem('userUuid', authenticatedUser.id);
+      localStorage.setItem('email', authenticatedUser.email);
     };
 
     const login = async (email: string, password: string) => {
@@ -43,7 +49,7 @@ export const setupAuthStore = (adapter: IAuthService, profileService: IProfileSe
       try {
         const loggedUser = await loginUseCase.execute(email, password);
         user.value = loggedUser;
-        await persistSession();
+        await persistSession(loggedUser);
       } catch (e: unknown) {
         error.value = getErrorMessage(e);
         throw e;
@@ -69,7 +75,7 @@ export const setupAuthStore = (adapter: IAuthService, profileService: IProfileSe
             console.warn('Profile creation warning (non-blocking):', getErrorMessage(profileError));
           }
 
-          await persistSession();
+          await persistSession(newUser);
         }
       } catch (e: unknown) {
         error.value = getErrorMessage(e);
@@ -99,7 +105,7 @@ export const setupAuthStore = (adapter: IAuthService, profileService: IProfileSe
         user.value = await adapter.getCurrentUser();
         
         if (user.value) {
-          await persistSession();
+          await persistSession(user.value);
           return;
         }
 

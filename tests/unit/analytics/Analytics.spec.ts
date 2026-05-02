@@ -1,5 +1,6 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
+import { createPinia } from 'pinia';
 import Analytics from '../../../src/analytics/presentation/views/Analytics.vue';
 
 const initialize = vi.fn();
@@ -21,6 +22,7 @@ vi.mock('../../../src/analytics/infrastructure/plants.service', () => ({
 vi.mock('../../../src/analytics/infrastructure/analytics.service', () => ({
   analyticsService: {
     getAllSensorData: vi.fn().mockResolvedValue({ data: [] }),
+    getRecentAverages: vi.fn().mockResolvedValue({ data: null }),
     calculateAnalyticsFromMetrics: vi.fn().mockReturnValue({
       summary: {
         avgTemperature: 0,
@@ -44,7 +46,11 @@ vi.mock('../../../src/analytics/infrastructure/assembler/analytics-assembler', (
 describe('Analytics', () => {
   it('renders empty state when there are no plants', async () => {
     vi.useFakeTimers();
-    const wrapper = mount(Analytics);
+    const wrapper = mount(Analytics, {
+      global: {
+        plugins: [createPinia()]
+      }
+    });
     await vi.runAllTimersAsync();
     await flushPromises();
 

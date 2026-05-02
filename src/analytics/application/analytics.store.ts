@@ -190,13 +190,10 @@ export const useAnalyticsStore = defineStore('analytics', {
       try {
         const response = await analyticsService.getAllSensorData();
         this.sensorData = response.data;
-        
-        console.log('[AnalyticsStore] Loaded sensor data:', this.sensorData.length);
       } catch (e: any) {
         if (isNotFoundError(e)) {
           this.sensorData = [];
           this.error = null;
-          console.log('[AnalyticsStore] No sensor data found');
         } else {
           this.error = e.message || 'Error loading sensor data';
           console.error('[AnalyticsStore] Error:', e);
@@ -213,8 +210,6 @@ export const useAnalyticsStore = defineStore('analytics', {
       try {
         const response = await analyticsService.getSensorDataByDevice(deviceId);
         this.sensorData = response.data;
-        
-        console.log('[AnalyticsStore] Loaded sensor data for device:', deviceId);
       } catch (e: any) {
         this.error = e.message || 'Error loading device sensor data';
         console.error('[AnalyticsStore] Error:', e);
@@ -229,9 +224,7 @@ export const useAnalyticsStore = defineStore('analytics', {
       
       try {
         await analyticsService.importSensorData(data);
-        
-        console.log('[AnalyticsStore] Imported sensor data successfully');
-        
+
         // Refresh data after import
         await this.fetchAllSensorData();
       } catch (e: any) {
@@ -249,13 +242,10 @@ export const useAnalyticsStore = defineStore('analytics', {
       try {
         const response = await analyticsService.getRecentAverages(limit);
         this.historicalAverages = response.data;
-        
-        console.log('[AnalyticsStore] Loaded historical averages:', this.historicalAverages);
       } catch (e: any) {
         if (isNotFoundError(e)) {
           this.historicalAverages = null;
           this.error = null;
-          console.log('[AnalyticsStore] No historical data found');
         } else {
           this.error = e.message || 'Error loading historical averages';
           console.error('[AnalyticsStore] Error:', e);

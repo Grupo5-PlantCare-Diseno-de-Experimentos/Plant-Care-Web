@@ -6,12 +6,12 @@ import { UserEntity } from '../../../src/auth/domain/UserEntity';
 const {
   adapterLoginMock,
   adapterSignUpMock,
-  getSessionMock,
+  getSessionTokenMock,
   createProfileMock
 } = vi.hoisted(() => ({
   adapterLoginMock: vi.fn(),
   adapterSignUpMock: vi.fn(),
-  getSessionMock: vi.fn(),
+  getSessionTokenMock: vi.fn(),
   createProfileMock: vi.fn()
 }));
 
@@ -20,16 +20,9 @@ vi.mock('../../../src/auth/adapters/SupabaseAuthAdapter', () => ({
     login: adapterLoginMock,
     signUp: adapterSignUpMock,
     logout: vi.fn(),
-    getCurrentUser: vi.fn()
+    getCurrentUser: vi.fn(),
+    getSessionToken: getSessionTokenMock
   }))
-}));
-
-vi.mock('../../../src/utils/supabase', () => ({
-  supabase: {
-    auth: {
-      getSession: getSessionMock
-    }
-  }
 }));
 
 vi.mock('../../../src/Profile/infrastructure/profile.service', () => ({
@@ -44,7 +37,7 @@ describe('Auth Integration - Store', () => {
     localStorage.clear();
     adapterLoginMock.mockReset();
     adapterSignUpMock.mockReset();
-    getSessionMock.mockReset();
+    getSessionTokenMock.mockReset();
     createProfileMock.mockReset();
   });
 
@@ -52,9 +45,7 @@ describe('Auth Integration - Store', () => {
     const store = useAuthStore();
     const user = new UserEntity('u-1', 'qa@store.com', 'authenticated', false, null);
     adapterLoginMock.mockResolvedValueOnce(user);
-    getSessionMock.mockResolvedValueOnce({
-      data: { session: { access_token: 'token-123' } }
-    });
+    getSessionTokenMock.mockResolvedValueOnce('token-123');
 
     await store.login('qa@store.com', 'StrongPass1!');
 
@@ -70,9 +61,7 @@ describe('Auth Integration - Store', () => {
     const store = useAuthStore();
     const user = new UserEntity('u-2', 'new@store.com', 'authenticated', false, null);
     adapterSignUpMock.mockResolvedValueOnce(user);
-    getSessionMock.mockResolvedValueOnce({
-      data: { session: { access_token: 'token-signup' } }
-    });
+    getSessionTokenMock.mockResolvedValueOnce('token-signup');
 
     await store.signUp('new@store.com', 'StrongPass1!');
 

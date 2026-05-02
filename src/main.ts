@@ -2,25 +2,16 @@ import { createApp } from 'vue';
 import PrimeVue from 'primevue/config';
 import Aura from '@primeuix/themes/aura';
 import App from "./App.vue";
-import { Button } from "primevue";
-import InputText from 'primevue/inputtext';
-import Toast from 'primevue/toast';
 import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
 import 'primeicons/primeicons.css'
 import './style.css'
 import router from './router';
 import { createPinia } from 'pinia';
-import './firebase.ts';
 import { i18n } from './i18n';
 
 // Crear la app
 const app = createApp(App);
-
-// Registrar componentes globales
-app.component('Button', Button);
-app.component('InputText', InputText);
-app.component('Toast', Toast);
 
 // Configurar PrimeVue
 app.use(PrimeVue, {
